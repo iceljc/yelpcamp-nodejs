@@ -1,3 +1,10 @@
+if (process.env.NODE_ENV !== "production") {
+    // access .env info when it is not in production mode
+    require('dotenv').config();
+}
+
+// console.log(process.env.SECRET);
+
 const express = require('express');
 const path = require('path');
 const methodOverride = require('method-override');
