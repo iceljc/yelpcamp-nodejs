@@ -15,6 +15,8 @@ ImageSchema.virtual('thumbnail').get(function () {
     return this.url.replace('/upload', '/upload/w_150');
 });
 
+const opts = { toJSON: { virtuals: true } };
+
 const CampgroundSchema = new Schema({
     title: String,
     images: [ImageSchema],
@@ -42,7 +44,16 @@ const CampgroundSchema = new Schema({
             ref: 'Review'
         }
     ]
+}, opts);
+
+// used for cluster map
+CampgroundSchema.virtual('properties.popUpMarkup').get(function () {
+    return `
+    <strong><a href="/campgrounds/${this._id}">${this.title}</a><strong>
+    <p>${this.description.substring(0, 20)}...</p>`
 });
+
+
 
 // middleware: delete associated reviews after deleting a campground
 CampgroundSchema.post('findOneAndDelete', async (camp) => {
