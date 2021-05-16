@@ -24,7 +24,13 @@ const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
 const userRoutes = require('./routes/users');
 
-mongoose.connect('mongodb://localhost:27017/yelp-camp', {
+const MongoDBStore = require("connect-mongo");
+
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+// const dbUrl = 'mongodb://localhost:27017/yelp-camp';
+
+
+mongoose.connect(dbUrl, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,
@@ -52,9 +58,26 @@ app.use(mongoSanitize({
     replaceWith: '_' // replace a '$' sign with '_'
 }));
 
+
+const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
+
+// default session store is memory store
+// use mongo-connect for session store now
+const store = MongoDBStore.create({
+    mongoUrl: dbUrl,
+    secret,
+    touchAfter: 24 * 60 * 60 // prevent unnecessary session update; it will update session after a period of time.
+});
+
+store.on("error", function (e) {
+    console.log("SESSION STORE ERROR", e)
+})
+
+
 const sessionConfig = {
-    name: 'yelp-camp-session',
-    secret: "thisshouldbeabettersecret",
+    store,
+    name: 'yel-camp-session',
+    secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -64,6 +87,9 @@ const sessionConfig = {
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
 };
+
+
+
 
 app.use(session(sessionConfig));
 app.use(flash());
@@ -174,3 +200,4 @@ app.use((err, req, res, next) => {
 app.listen(3000, () => {
     console.log("Server on port 3000");
 })
+
